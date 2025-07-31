@@ -1,0 +1,215 @@
+<html lang="en"><head><meta charset="utf-8"/><title></title><style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #game {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 10px;
+            width: max-content;
+            margin: 20px auto;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            gap: 5px;
+        }
+        .tile {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ccc;
+            font-size: 24px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+        }
+        .correct {
+            background-color: green;
+            color: white;
+        }
+        .present {
+            background-color: goldenrod;
+            color: white;
+        }
+        .absent {
+            background-color: lightgray;
+            color: white;
+        }
+        #keyboard {
+            margin-top: 20px;
+        }
+        .key {
+            padding: 10px;
+            margin: 2px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: darkblue;
+        }
+    </style><style>
+body {
+    background: linear-gradient(to bottom, #d0e6d0, #f0f8f0);
+    font-family: 'Comic Neue', cursive;
+    color: #2e4d2e;
+    margin: 0;
+    padding: 0;
+}
+button:hover {
+    background-color: #3e8e41;
+}
+</style></head><body><button id="resetButton" style="position: absolute; top: 10px; right: 10px; padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;"></button><h1></h1><div id="game"></div><div id="keyboard"></div><div id="message"></div><script>
+        const wordBank = ["peace", "focus", "calm", "aware", "breathe", "present", "accept", "listen", "center", "ground"];
+        const wordLength = 5;
+        const maxGuesses = 6;
+        const targetWord = wordBank[Math.floor(Math.random() * wordBank.length)].toLowerCase().slice(0, wordLength);
+        let currentGuess = "";
+        let currentRow = 0;
+
+        const game = document.getElementById("game");
+        const keyboard = document.getElementById("keyboard");
+        const message = document.getElementById("message");
+
+        // Create game grid
+        for (let i = 0; i < maxGuesses; i++) {
+            const row = document.createElement("div");
+            row.className = "row";
+            for (let j = 0; j < wordLength; j++) {
+                const tile = document.createElement("div");
+                tile.className = "tile";
+                row.appendChild(tile);
+            }
+            game.appendChild(row);
+        }
+
+        // Create keyboard
+        const keys = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
+        keys.forEach(key => {
+            const button = document.createElement("button");
+            button.className = "key";
+            button.textContent = key;
+            button.onclick = () => handleKey(key.toLowerCase());
+            keyboard.appendChild(button);
+        });
+        const enter = document.createElement("button");
+        enter.className = "key";
+        enter.textContent = "Enter";
+        enter.onclick = submitGuess;
+        keyboard.appendChild(enter);
+
+        const backspace = document.createElement("button");
+        backspace.className = "key";
+        backspace.textContent = "←";
+        backspace.onclick = () => {
+            if (currentGuess.length > 0) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateRow();
+            }
+        };
+        keyboard.appendChild(backspace);
+
+        function handleKey(letter) {
+            if (currentGuess.length < wordLength) {
+                currentGuess += letter;
+                updateRow();
+            }
+        }
+
+        function updateRow() {
+            const row = game.children[currentRow];
+            for (let i = 0; i < wordLength; i++) {
+                row.children[i].textContent = currentGuess[i] || "";
+            }
+        }
+
+        function submitGuess() {
+            if (currentGuess.length !== wordLength) {
+                message.textContent = "Not enough letters!";
+                return;
+            }
+
+            const row = game.children[currentRow];
+            const guess = currentGuess.toLowerCase();
+            const target = targetWord.split("");
+
+            for (let i = 0; i < wordLength; i++) {
+                const tile = row.children[i];
+                const letter = guess[i];
+                if (letter === target[i]) {
+                    tile.classList.add("correct");
+                } else if (target.includes(letter)) {
+                    tile.classList.add("present");
+                } else {
+                    tile.classList.add("absent");
+                }
+            }
+
+            if (guess === targetWord) {
+                message.textContent = "Congratulations! You guessed the word!";
+                disableInput();
+                return;
+            }
+
+            currentRow++;
+            currentGuess = "";
+
+            if (currentRow >= maxGuesses) {
+                message.textContent = `Game Over! The word was "${targetWord}".`;
+                disableInput();
+            }
+        }
+
+        function disableInput() {
+            const buttons = document.querySelectorAll(".key");
+            buttons.forEach(btn => btn.disabled = true);
+        }
+    </script><script>document.getElementById('resetButton').onclick = () => location.reload();</script><canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas><script>
+function showConfetti() {
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const pieces = Array.from({length: 150}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 50 + 10,
+        color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+        tilt: Math.random() * 10 - 10
+    }));
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+        });
+        update();
+    }
+    function update() {
+        pieces.forEach(p => {
+            p.y += Math.cos(p.d) + 1 + p.r / 2;
+            p.x += Math.sin(p.d);
+            if (p.y > canvas.height) {
+                p.y = -10;
+                p.x = Math.random() * canvas.width;
+            }
+        });
+    }
+    function animate() {
+        draw();
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+</script></body></html>
